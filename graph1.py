@@ -1,5 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+from collections import deque
 
 # Список обласних центрів України у зворотному порядку
 cities = [
@@ -78,18 +79,64 @@ start_node = "Ужгород"
 end_node = "Полтава"
 
 # DFS
+def dfs_iterative(graph, start_vertex):
+    visited = set()
+    visited_order = []  # Список для зберігання порядку відвіданих вершин
+    # Використовуємо стек для зберігання вершин
+    stack = [start_vertex]
+    while stack:
+        # Вилучаємо вершину зі стеку
+        vertex = stack.pop()  
+        if vertex not in visited:
+            visited_order.append(vertex)
+            # Відвідуємо вершину
+            visited.add(vertex)
+            # Додаємо сусідні вершини до стеку
+            stack.extend(reversed(list(graph[vertex])))
+    return visited_order
+
+#BFS
+def bfs_recursive(graph, queue, visited=None, visited_order=None):
+    # Перевіряємо, чи існує множина відвіданих вершин, якщо ні, то ініціалізуємо нову
+    if visited is None:
+        visited = set()
+    if visited_order is None:
+        visited_order = []
+    # Якщо черга порожня, завершуємо рекурсію
+    if not queue:
+        return visited_order
+    # Вилучаємо вершину з початку черги
+    vertex = queue.popleft()
+    # Перевіряємо, чи відвідували раніше дану вершину
+    if vertex not in visited:
+        # Якщо не відвідували, додаємо вершину до списку відвіданих
+        visited_order.append(vertex)
+        # Додаємо вершину до множини відвіданих вершин.
+        visited.add(vertex)
+        # Додаємо невідвіданих сусідів даної вершини в кінець черги.
+        queue.extend(set(graph.neighbors(vertex)) - visited)
+    # Рекурсивний виклик функції з тією ж чергою та множиною відвіданих вершин
+    return bfs_recursive(graph, queue, visited, visited_order)
+
+
+dfs_path2 = dfs_iterative(G, start_node)            
 dfs_path = list(nx.dfs_edges(G, source=start_node))
 dfs_path = [start_node] + [v for u, v in dfs_path]
 
 # BFS
+bfs_path2 = bfs_recursive(G, deque([start_node]))
 bfs_path = list(nx.bfs_edges(G, source=start_node))
 bfs_path = [start_node] + [v for u, v in bfs_path]
 
 print("\nШлях DFS:")
 print(" -> ".join(dfs_path))
+print("\nШлях DFS2:")
+print(" -> ".join(dfs_path2))
 
 print("\nШлях BFS:")
 print(" -> ".join(bfs_path))
+print("\nШлях BFS:")
+print(" -> ".join(bfs_path2))
 
 # Порівняння шляхів
 dfs_path_set = set(dfs_path)
